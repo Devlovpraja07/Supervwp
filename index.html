@@ -1,0 +1,396 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BGMI Events - Admin Panel</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <style>
+        :root {
+            --primary-color: #e74c3c; /* Admin Panel Red */
+            --secondary-color: #c0392b; /* Darker Red */
+            --background-light: #ecf0f1;
+            --text-dark: #2c3e50;
+            --card-bg: #ffffff;
+            --border-color: #bdc3c7;
+        }
+        body {
+            font-family: 'Arial', sans-serif;
+            background-color: var(--background-light);
+            color: var(--text-dark);
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        .container {
+            width: 100%;
+            max-width: 900px;
+            background-color: var(--card-bg);
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1, h2 {
+            color: var(--primary-color);
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        /* Login/Auth Styles */
+        #admin-auth-container { text-align: center; margin-bottom: 30px; }
+        #admin-auth-container p { margin-bottom: 15px; }
+        .admin-login-form input {
+            padding: 10px; margin-bottom: 10px; width: calc(100% - 22px); max-width: 300px;
+            border: 1px solid var(--border-color); border-radius: 4px;
+        }
+        .admin-login-form button, .action-button {
+            padding: 10px 15px; background-color: var(--primary-color); color: white;
+            border: none; border-radius: 4px; cursor: pointer; font-weight: bold;
+            transition: background-color 0.2s;
+        }
+        .admin-login-form button:hover, .action-button:hover { background-color: var(--secondary-color); }
+        .error-message { color: var(--primary-color); font-size: 0.9em; margin-top: 5px; }
+        .hidden { display: none !important; }
+
+        /* Table Styles */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 20px;
+        }
+        th, td {
+            border: 1px solid var(--border-color);
+            padding: 10px;
+            text-align: left;
+            vertical-align: middle;
+        }
+        th { background-color: #f2f2f2; color: var(--text-dark); }
+        td img { max-width: 100px; max-height: 60px; border-radius: 4px; object-fit: cover; }
+        .actions button { margin-right: 5px; font-size: 0.9em; padding: 5px 8px; }
+        .actions .edit-btn { background-color: #3498db; } /* Blue */
+        .actions .edit-btn:hover { background-color: #2980b9; }
+        .actions .delete-btn { background-color: #e74c3c; } /* Red */
+        .actions .delete-btn:hover { background-color: #c0392b; }
+
+
+        /* Modal (for Add/Edit Event) */
+        .modal {
+            display: none; position: fixed; z-index: 100; left: 0; top: 0;
+            width: 100%; height: 100%; overflow: auto;
+            background-color: rgba(0,0,0,0.5);
+            align-items: center; justify-content: center;
+        }
+        .modal-content {
+            background-color: var(--card-bg); margin: auto; padding: 20px;
+            border: 1px solid #888; border-radius: 8px; width: 90%; max-width: 500px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3); position: relative;
+        }
+        .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
+        .modal-header h3 { margin: 0; color: var(--primary-color); }
+        .close-modal-btn { color: #aaa; font-size: 28px; font-weight: bold; background: none; border: none; cursor: pointer; }
+        .close-modal-btn:hover, .close-modal-btn:focus { color: var(--text-dark); }
+        .form-group { margin-bottom: 15px; }
+        .form-group label { display: block; margin-bottom: 5px; font-weight: bold; }
+        .form-group input[type="text"], .form-group input[type="url"], .form-group textarea {
+            width: calc(100% - 22px); padding: 10px; border: 1px solid var(--border-color); border-radius: 4px;
+        }
+        .form-group textarea { min-height: 80px; resize: vertical; }
+        .loader {
+            border: 4px solid #f3f3f3; border-top: 4px solid var(--primary-color);
+            border-radius: 50%; width: 30px; height: 30px;
+            animation: spin 1s linear infinite; margin: 20px auto;
+        }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+    </style>
+</head>
+<body>
+    <div id="admin-auth-container">
+        <h1>Admin Login</h1>
+        <form id="admin-login-form" class="admin-login-form">
+            <input type="email" id="admin-email" placeholder="Admin Email" required><br>
+            <input type="password" id="admin-password" placeholder="Admin Password" required><br>
+            <button type="submit">Login</button>
+            <p id="admin-login-error" class="error-message hidden"></p>
+        </form>
+    </div>
+
+    <div id="admin-panel-content" class="container hidden">
+        <h1>Event Management</h1>
+        <div style="text-align: right; margin-bottom: 20px;">
+             <span id="admin-user-email" style="margin-right: 20px;"></span>
+            <button id="admin-logout-btn" class="action-button" style="background-color: #7f8c8d;">Logout</button>
+        </div>
+        <button id="show-add-event-modal-btn" class="action-button" style="margin-bottom: 20px; background-color: #2ecc71;">
+            <i class="fas fa-plus"></i> Add New Event
+        </button>
+
+        <h2>Current Events</h2>
+        <div id="events-table-container">
+            <div class="loader hidden" id="eventsLoader"></div>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Title</th>
+                        <th>Image</th>
+                        <th>Description</th>
+                        <th>Created At</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="events-tbody">
+                    <!-- Events will be loaded here by JavaScript -->
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Add/Edit Event Modal -->
+    <div id="event-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="modal-title">Add New Event</h3>
+                <button class="close-modal-btn" data-modal-id="event-modal">×</button>
+            </div>
+            <form id="event-form">
+                <input type="hidden" id="event-id"> <!-- For editing existing event -->
+                <div class="form-group">
+                    <label for="event-title">Event Title</label>
+                    <input type="text" id="event-title-input" required>
+                </div>
+                <div class="form-group">
+                    <label for="event-description">Description</label>
+                    <textarea id="event-description-input" required></textarea>
+                </div>
+                <div class="form-group">
+                    <label for="event-image-url">Image URL</label>
+                    <input type="url" id="event-image-url-input" placeholder="https://via.placeholder.com/300x180">
+                </div>
+                <button type="submit" id="save-event-btn" class="action-button" style="background-color: #2ecc71;">Save Event</button>
+                <p id="event-form-error" class="error-message hidden"></p>
+            </form>
+        </div>
+    </div>
+
+    <!-- Firebase SDKs -->
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+
+    <script>
+        // Firebase Config - REPLACE with your actual project config
+        const firebaseConfig = {
+            apiKey: "AIzaSyD6EXA7D77rQDQEohB52BvTYimFeTEaAho", // <<<<<<<<<<<< REPLACE THIS
+            authDomain: "rn-gfx-tool.firebaseapp.com", 
+            databaseURL: "https://rn-gfx-tool-default-rtdb.asia-southeast1.firebasedatabase.app",
+            projectId: "rn-gfx-tool",
+            storageBucket: "rn-gfx-tool.firebasestorage.app",
+            messagingSenderId: "163149358541", // From your provided config
+            appId: "1:163149358541:android:2ef6d22fcd23e77ee09084", // From your provided config
+        };
+
+        firebase.initializeApp(firebaseConfig);
+        const auth = firebase.auth();
+        const database = firebase.database();
+        const eventsRef = database.ref('events');
+
+        // --- Admin Auth & Panel State ---
+        const adminAuthContainer = document.getElementById('admin-auth-container');
+        const adminPanelContent = document.getElementById('admin-panel-content');
+        const adminLoginForm = document.getElementById('admin-login-form');
+        const adminLogoutBtn = document.getElementById('admin-logout-btn');
+        const adminUserEmailSpan = document.getElementById('admin-user-email');
+        const eventsLoader = document.getElementById('eventsLoader');
+
+        // Define your Admin UIDs here. 
+        // IMPORTANT: This is basic client-side security.
+        // For better security, use custom claims set via Firebase Admin SDK (server-side).
+        const ADMIN_UIDS = ["9XU6PQIei1fZKG4ZJWbf9evCVQF3", "er8vawI4iBhezKz2qFhpHHIpVr53"]; // <<<<<< REPLACE
+
+        auth.onAuthStateChanged(user => {
+            if (user && ADMIN_UIDS.includes(user.uid)) {
+                adminAuthContainer.classList.add('hidden');
+                adminPanelContent.classList.remove('hidden');
+                adminUserEmailSpan.textContent = `Logged in as: ${user.email}`;
+                loadEventsForAdmin();
+            } else {
+                adminAuthContainer.classList.remove('hidden');
+                adminPanelContent.classList.add('hidden');
+                adminUserEmailSpan.textContent = '';
+                if (user) { 
+                    auth.signOut(); 
+                    alert("Access Denied. This panel is for administrators only.");
+                }
+            }
+        });
+
+        adminLoginForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            const email = document.getElementById('admin-email').value;
+            const password = document.getElementById('admin-password').value;
+            const errorEl = document.getElementById('admin-login-error');
+            errorEl.classList.add('hidden');
+
+            auth.signInWithEmailAndPassword(email, password)
+                .then(userCredential => {
+                    if (!ADMIN_UIDS.includes(userCredential.user.uid)) {
+                        auth.signOut();
+                        errorEl.textContent = "Access Denied. Not an authorized admin.";
+                        errorEl.classList.remove('hidden');
+                    }
+                    // onAuthStateChanged will handle UI update if admin
+                })
+                .catch(error => {
+                    errorEl.textContent = error.message;
+                    errorEl.classList.remove('hidden');
+                });
+        });
+
+        adminLogoutBtn.addEventListener('click', () => {
+            auth.signOut();
+        });
+
+
+        // --- Modal Handling ---
+        const eventModal = document.getElementById('event-modal');
+        const showAddEventModalBtn = document.getElementById('show-add-event-modal-btn');
+        const eventForm = document.getElementById('event-form');
+        const modalTitle = document.getElementById('modal-title');
+        const eventIdInput = document.getElementById('event-id'); 
+        const eventTitleInput = document.getElementById('event-title-input');
+        const eventDescriptionInput = document.getElementById('event-description-input');
+        const eventImageUrlInput = document.getElementById('event-image-url-input');
+        const eventFormError = document.getElementById('event-form-error');
+
+        function openModal(modalId) { document.getElementById(modalId).style.display = 'flex'; }
+        function closeModal(modalId) { document.getElementById(modalId).style.display = 'none'; }
+
+        document.querySelectorAll('.close-modal-btn').forEach(btn => {
+            btn.addEventListener('click', () => closeModal(btn.dataset.modalId));
+        });
+        window.addEventListener('click', (event) => {
+            if (event.target.classList.contains('modal')) closeModal(event.target.id);
+        });
+
+        showAddEventModalBtn.addEventListener('click', () => {
+            modalTitle.textContent = "Add New Event";
+            eventForm.reset();
+            eventIdInput.value = ''; 
+            eventFormError.classList.add('hidden');
+            openModal('event-modal');
+        });
+
+        // --- CRUD Operations for Events ---
+        eventForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            const user = auth.currentUser;
+            if (!user || !ADMIN_UIDS.includes(user.uid)) {
+                alert("Unauthorized action.");
+                return;
+            }
+
+            const title = eventTitleInput.value;
+            const description = eventDescriptionInput.value;
+            const imageUrl = eventImageUrlInput.value || 'https://via.placeholder.com/300x180/2ecc71/FFFFFF?text=Event';
+            const currentEventId = eventIdInput.value; 
+            eventFormError.classList.add('hidden');
+
+            const eventData = {
+                title: title,
+                description: description,
+                imageUrl: imageUrl,
+                authorUid: user.uid,
+                authorName: user.displayName || user.email,
+            };
+
+            let promise;
+            if (currentEventId) { 
+                eventData.updatedAt = firebase.database.ServerValue.TIMESTAMP;
+                promise = eventsRef.child(currentEventId).update(eventData);
+            } else { 
+                eventData.createdAt = firebase.database.ServerValue.TIMESTAMP;
+                promise = eventsRef.push(eventData);
+            }
+
+            promise.then(() => {
+                eventForm.reset();
+                closeModal('event-modal');
+            }).catch(error => {
+                eventFormError.textContent = "Error saving event: " + error.message;
+                eventFormError.classList.remove('hidden');
+            });
+        });
+
+        function loadEventsForAdmin() {
+            eventsLoader.classList.remove('hidden');
+            const tbody = document.getElementById('events-tbody');
+            
+            eventsRef.orderByChild('createdAt').on('value', snapshot => {
+                eventsLoader.classList.add('hidden');
+                tbody.innerHTML = ''; 
+                if (!snapshot.exists()) {
+                    tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;">No events found.</td></tr>';
+                    return;
+                }
+                snapshot.forEach(childSnapshot => {
+                    const event = childSnapshot.val();
+                    const eventId = childSnapshot.key;
+                    const row = `
+                        <tr>
+                            <td>${event.title}</td>
+                            <td><img src="${event.imageUrl}" alt="${event.title}"></td>
+                            <td>${(event.description || "").substring(0, 50)}${(event.description || "").length > 50 ? '...' : ''}</td>
+                            <td>${new Date(event.createdAt).toLocaleDateString()}</td>
+                            <td class="actions">
+                                <button class="action-button edit-btn" data-id="${eventId}"><i class="fas fa-edit"></i> Edit</button>
+                                <button class="action-button delete-btn" data-id="${eventId}"><i class="fas fa-trash-alt"></i> Delete</button>
+                            </td>
+                        </tr>
+                    `;
+                    tbody.insertAdjacentHTML('afterbegin', row);
+                });
+
+                document.querySelectorAll('.edit-btn').forEach(button => {
+                    button.addEventListener('click', handleEditEvent);
+                });
+                document.querySelectorAll('.delete-btn').forEach(button => {
+                    button.addEventListener('click', handleDeleteEvent);
+                });
+            }, error => {
+                console.error("Error loading events for admin: ", error);
+                eventsLoader.classList.add('hidden');
+                tbody.innerHTML = '<tr><td colspan="5" style="text-align:center; color:red;">Error loading events.</td></tr>';
+            });
+        }
+
+        function handleEditEvent(e) {
+            const eventId = e.currentTarget.dataset.id;
+            eventsRef.child(eventId).once('value').then(snapshot => {
+                const eventData = snapshot.val();
+                if (eventData) {
+                    modalTitle.textContent = "Edit Event";
+                    eventIdInput.value = eventId; 
+                    eventTitleInput.value = eventData.title;
+                    eventDescriptionInput.value = eventData.description;
+                    eventImageUrlInput.value = eventData.imageUrl;
+                    eventFormError.classList.add('hidden');
+                    openModal('event-modal');
+                }
+            });
+        }
+
+        function handleDeleteEvent(e) {
+            const eventId = e.currentTarget.dataset.id;
+            if (confirm(`Are you sure you want to delete event ID: ${eventId}? This cannot be undone.`)) {
+                eventsRef.child(eventId).remove()
+                    .then(() => {
+                        console.log("Event deleted: ", eventId);
+                    })
+                    .catch(error => {
+                        alert("Error deleting event: " + error.message);
+                    });
+            }
+        }
+    </script>
+</body>
+</html>
