@@ -1,783 +1,218 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>BGMI HQ Admin Panel</title>
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
-  <style>
-    /* Responsive Dark/White Admin Panel Styling */
-    :root {
-      --primary-accent: #52b788; /* Muted Green Accent for buttons/highlights */
-      --bg-dark: #121212; /* Very Dark Background */
-      --card-dark: #1e1e1e; /* Slightly less dark for cards */
-      --text-light: #ffffff; /* White Text */
-      --text-muted: #cccccc; /* Light Gray for secondary text */
-      --border-subtle: rgba(255, 255, 255, 0.1); /* Subtle white border */
-      --danger: #cf6679; /* Muted Red for danger */
-      --success: #8ac926; /* Muted Green for success */
-      --warning: #ffca3a; /* Muted Yellow for warning */
-      --shadow: 0 2px 4px rgba(0, 0, 0, 0.5); /* Darker shadow */
-    }
-    * { margin: 0; padding: 0; box-sizing: border-box; }
-    body {
-      font-family: 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
-      background: var(--bg-dark);
-      color: var(--text-light);
-      line-height: 1.6;
-      padding: 15px; /* Slightly less padding on mobile */
-    }
-     @media (min-width: 768px) { /* More padding on larger screens */
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin - Bot Data</title>
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+    <style>
         body {
+            font-family: Arial, sans-serif;
+            background: #f0f2f5;
+            margin: 0;
             padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
         }
-     }
-
-    .container {
-      width: 100%; /* Full width on small screens */
-      max-width: 900px; /* Max width on larger screens */
-      margin: 0 auto; /* Center the container */
-      background: var(--card-dark); /* Card background for the main container */
-      padding: 15px; /* Padding inside container */
-      border-radius: 8px;
-      box-shadow: var(--shadow);
-    }
-     @media (min-width: 768px) {
-         .container {
-             padding: 20px;
-         }
-     }
-
-    h1, h2 {
-      color: var(--primary-accent); /* Accent color for headings */
-      text-align: center;
-      margin-bottom: 20px;
-    }
-    h1 {
-        font-size: 1.8em; /* Adjusted size */
-    }
-    h2 {
-        font-size: 1.4em; /* Adjusted size */
-        margin-top: 25px; /* Space above section titles */
-        padding-bottom: 10px;
-        border-bottom: 1px solid var(--border-subtle); /* Subtle separator */
-    }
-    .section {
-      margin-bottom: 30px;
-      padding: 15px;
-      background: var(--card-dark); /* Card background */
-      border-radius: 8px;
-      box-shadow: var(--shadow);
-      border: 1px solid var(--border-subtle); /* Subtle border */
-    }
-    .form-group {
-      margin-bottom: 15px;
-    }
-    .form-group label {
-      display: block;
-      margin-bottom: 6px; /* Slightly more space below label */
-      font-weight: bold;
-      color: var(--text-muted); /* Muted color for labels */
-      font-size: 0.95em;
-    }
-     .form-group input[type="text"],
-     .form-group input[type="url"],
-     .form-group textarea {
-        width: 100%;
-        padding: 10px;
-        background: var(--bg-dark); /* Dark input background */
-        border: 1px solid var(--border-subtle); /* Subtle border */
-        border-radius: 4px;
-        color: var(--text-light); /* White text */
-        font-size: 1em;
-         box-shadow: inset 0 1px 3px rgba(0,0,0,0.3); /* Inner shadow for depth */
-     }
-      .form-group input[type="text"]:focus,
-       .form-group input[type="url"]:focus,
-       .form-group textarea:focus {
-           outline: none;
-           border-color: var(--primary-accent); /* Highlight on focus */
-           box-shadow: inset 0 1px 3px rgba(0,0,0,0.3), 0 0 5px rgba(82, 183, 136, 0.5);
-       }
-     .form-group textarea {
-         min-height: 100px; /* Slightly taller text area */
-         resize: vertical;
-     }
-    .form-group input[type="checkbox"] {
-        margin-right: 5px;
-         transform: scale(1.2); /* Make checkbox slightly larger */
-         vertical-align: middle; /* Align checkbox with text */
-    }
-
-    .btn {
-      display: inline-block;
-      padding: 10px 15px;
-      background: var(--primary-accent);
-      color: var(--bg-dark); /* Dark text on accent */
-      border: none;
-      border-radius: 4px;
-      cursor: pointer;
-      font-weight: bold;
-      margin-right: 10px;
-      transition: background-color 0.2s ease;
-      text-decoration: none; /* Ensure it looks like a button */
-      text-align: center; /* Center text */
-      font-size: 1em;
-    }
-    .btn:last-child {
-        margin-right: 0; /* No margin on the last button */
-    }
-    .btn:hover {
-      background-color: #74c69d; /* Lighter accent on hover */
-    }
-    .btn-danger {
-      background: var(--danger);
-      color: var(--text-light);
-    }
-    .btn-danger:hover {
-      background-color: #cf8694; /* Lighter red on hover */
-    }
-     .btn-secondary {
-      background: var(--text-muted); /* Muted gray background */
-      color: var(--bg-dark); /* Dark text */
-    }
-     .btn-secondary:hover {
-         background-color: #e0e0e0; /* Lighter gray on hover */
-     }
-     .btn:disabled {
-         background-color: #333; /* Darker disabled */
-         color: #999; /* Lighter gray text */
-         cursor: not-allowed;
-         box-shadow: none;
-     }
-
-    .post-list {
-      margin-top: 20px;
-    }
-    .post-item {
-      background: var(--bg-dark); /* Dark background for list items */
-      padding: 15px;
-      margin-bottom: 15px;
-      border-radius: 4px;
-      border: 1px solid var(--border-subtle); /* Subtle border */
-      display: flex;
-      flex-direction: column; /* Stack elements by default on mobile */
-      align-items: flex-start; /* Align items to the start */
-    }
-    @media (min-width: 600px) { /* Arrange side-by-side on wider screens */
-        .post-item {
-             flex-direction: row;
-             align-items: center; /* Re-align to center */
+        .admin-container {
+            width: 100%;
+            max-width: 800px;
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
         }
-    }
-
-    .post-item img {
-        width: 100%; /* Full width on mobile */
-        height: 120px; /* Fixed height for image */
-        object-fit: cover;
-        margin-bottom: 10px; /* Space below image on mobile */
-        margin-right: 0; /* No right margin on mobile */
-        border-radius: 4px;
-        border: 1px solid var(--border-subtle);
-    }
-     @media (min-width: 600px) {
-         .post-item img {
-             width: 80px; /* Smaller fixed width on desktop */
-             height: 80px; /* Match height */
-             margin-right: 15px; /* Add right margin on desktop */
-             margin-bottom: 0; /* Remove bottom margin on desktop */
-         }
-     }
-
-     .post-details {
-         flex-grow: 1;
-         margin-bottom: 10px; /* Space below details on mobile */
-         width: 100%; /* Take full width on mobile */
-     }
-     @media (min-width: 600px) {
-          .post-details {
-              margin-bottom: 0; /* Remove bottom margin on desktop */
-              width: auto; /* Auto width on desktop */
-          }
-     }
-
-    .post-details h3 {
-      margin: 0 0 5px 0;
-      color: var(--primary-accent);
-      font-size: 1.1em;
-    }
-    .post-details p {
-        margin: 0; /* No margin on paragraph */
-        font-size: 0.9em;
-        color: var(--text-muted); /* Muted text color */
-    }
-     .post-actions {
-         width: 100%; /* Full width on mobile */
-         text-align: right; /* Align buttons to the right on mobile */
-     }
-     @media (min-width: 600px) {
-         .post-actions {
-             width: auto; /* Auto width on desktop */
-             text-align: left; /* Align buttons to the left (or remove) */
-             flex-shrink: 0; /* Prevent shrinking */
-             margin-left: 15px; /* Space to the left of buttons */
-         }
-          .post-actions button {
-            margin-left: 5px; /* Space between buttons */
-         }
-     }
-     .post-actions button {
-         margin-top: 8px; /* Space above buttons on mobile */
-         padding: 8px 12px; /* Adjusted padding */
-         font-size: 0.9em;
-     }
-     @media (min-width: 600px) {
-         .post-actions button {
-             margin-top: 0; /* Remove top margin on desktop */
-         }
-     }
-
-
-     .settings-form .form-group {
-         display: flex;
-         flex-direction: column; /* Stack by default on mobile */
-         align-items: flex-start; /* Align items to the start */
-         margin-bottom: 15px;
-         padding: 10px; /* Increased padding */
-         background: var(--bg-dark); /* Dark background */
-         border-radius: 4px;
-         border: 1px solid var(--border-subtle);
-     }
-     @media (min-width: 600px) { /* Arrange side-by-side on wider screens */
-         .settings-form .form-group {
-             flex-direction: row;
-             align-items: center;
-             justify-content: space-between;
-         }
-     }
-      .settings-form .form-group label {
-          margin-bottom: 5px; /* Space below label on mobile */
-          flex-basis: 150px; /* Give labels a base width on desktop */
-          flex-shrink: 0; /* Prevent label from shrinking */
-          margin-right: 10px; /* Space between label and input on desktop */
-          color: var(--text-muted);
-          font-weight: normal; /* Labels less bold in settings */
-      }
-       @media (min-width: 600px) {
-           .settings-form .form-group label {
-               margin-bottom: 0;
-           }
-       }
-
-       .settings-form .form-group input[type="text"],
-       .settings-form .form-group input[type="url"],
-       .settings-form .form-group textarea {
-           flex-grow: 1; /* Allow inputs to grow */
-           width: 100%; /* Ensure full width on mobile */
-           margin-left: 0; /* Remove left margin on mobile */
-       }
-       @media (min-width: 600px) {
-           .settings-form .form-group input[type="text"],
-           .settings-form .form-group input[type="url"],
-            .settings-form .form-group textarea {
-               width: auto; /* Auto width on desktop */
-               margin-left: 10px; /* Add left margin on desktop */
-           }
-       }
-
-       .settings-form .form-group input[type="checkbox"] {
-           margin: 0; /* Remove margin */
-           margin-left: auto; /* Push checkbox to the right on desktop */
-       }
-        @media (max-width: 599px) { /* Center checkbox on mobile */
-             .settings-form .form-group input[type="checkbox"] {
-                 margin: 10px auto 0; /* Add space and center below label/input */
-             }
-             .settings-form .form-group label {
-                 width: 100%; /* Make label take full width above checkbox */
-             }
+        .admin-options {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
         }
-
-
-        .settings-form button {
-            margin-top: 20px; /* Space above save button */
-            width: 100%; /* Full width button */
-            padding: 12px; /* Larger touch target */
-            font-size: 1.1em;
+        .admin-btn {
+            background: #0088cc;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
         }
-
-    #message {
-        margin: 20px 0; /* Add vertical margin */
-        padding: 10px;
-        border-radius: 4px;
-        display: none; /* Hidden by default */
-        text-align: center;
-        font-weight: bold;
-        font-size: 0.95em;
-    }
-    #message.success {
-        background-color: rgba(138, 201, 38, 0.2);
-        color: var(--success);
-        border: 1px solid var(--success);
-    }
-     #message.error {
-        background-color: rgba(207, 102, 121, 0.2);
-        color: var(--danger);
-        border: 1px solid var(--danger);
-    }
-     #message.warning {
-        background-color: rgba(255, 202, 58, 0.2);
-        color: var(--warning);
-        border: 1px solid var(--warning);
-    }
-
-     .hidden {
-         display: none;
-     }
-  </style>
+        .admin-btn:hover {
+            background: #0077b3;
+        }
+        .clear-btn {
+            background: #ff3333;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+            margin-top: 10px;
+        }
+        .clear-btn:hover {
+            background: #cc0000;
+        }
+        .content {
+            background: #222;
+            border-radius: 10px;
+            padding: 10px;
+            text-align: center;
+        }
+        .content img {
+            width: 100%;
+            display: block;
+            border-radius: 5px;
+        }
+        .data-box {
+            background: #f8f9fa;
+            padding: 10px;
+            border-radius: 5px;
+            margin-top: 10px;
+            word-break: break-all;
+            font-family: monospace;
+            font-size: 13px;
+            border: 1px dashed #ddd;
+        }
+        .error {
+            color: #ff3333;
+            background: #ffeeee;
+            padding: 10px;
+            border-radius: 5px;
+            margin-top: 10px;
+        }
+    </style>
 </head>
 <body>
-  <div class="container">
-    <h1>Admin Dashboard</h1>
-
-    <div id="message"></div>
-
-    <div class="section">
-        <h2>Home Content Management</h2>
-        <button class="btn" id="addNewPostBtn"><i class="fas fa-plus"></i> Add New Post</button>
-
-        <div class="post-form hidden" id="postForm">
-            <h3>Add/Edit Post</h3> <!-- Used h3 for form title -->
-            <input type="hidden" id="postId"> <!-- Hidden field for item key -->
-            <div class="form-group">
-                <label for="postTitle">Title:</label>
-                <input type="text" id="postTitle" required>
-            </div>
-            <div class="form-group">
-                <label for="postDesc">Description:</label>
-                <textarea id="postDesc" required></textarea>
-            </div>
-            <div class="form-group">
-                <label for="postThumbnail">Thumbnail URL:</label>
-                <input type="url" id="postThumbnail" required>
-            </div>
-             <div class="form-group">
-                <label for="postLink">Link URL (for Open button):</label>
-                <input type="url" id="postLink" required>
-            </div>
-            <button class="btn" id="savePostBtn"><i class="fas fa-save"></i> Save Post</button> <!-- Added Icon -->
-            <button class="btn btn-secondary" id="cancelPostBtn"><i class="fas fa-times"></i> Cancel</button> <!-- Added Icon -->
+    <h1>Admin - Bot Data</h1>
+    <div class="admin-container">
+        <div class="admin-options">
+            <button class="admin-btn" onclick="showPhoto()">Photo</button>
+            <button class="admin-btn" onclick="showData()">Data</button>
         </div>
-
-        <div class="post-list" id="homeContentList">
-            <!-- Home content items will be loaded here -->
-            <p style="text-align:center; color: var(--text-muted);">Loading posts...</p> <!-- Use CSS variable -->
+        <div class="content" id="content">
+            <p>Select an option above to view data.</p>
         </div>
     </div>
 
-    <div class="section">
-        <h2>Settings Management</h2>
-        <div class="settings-form" id="settingsForm">
-             <div class="form-group">
-                <label for="showAds">Show Ads:</label>
-                <input type="checkbox" id="showAds">
-            </div>
-             <div class="form-group">
-                <label for="bannerAdId">Banner Ad ID:</label>
-                <input type="text" id="bannerAdId">
-            </div>
-            <div class="form-group">
-                <label for="interstitialAdId">Interstitial Ad ID:</label>
-                <input type="text" id="interstitialAdId">
-            </div>
-            <div class="form-group">
-                <label for="updateLink">Latest Update Download Link:</label>
-                <input type="url" id="updateLink">
-            </div>
-             <div class="form-group">
-                <label for="updateRequired">Update Required:</label>
-                <input type="checkbox" id="updateRequired">
-            </div>
-             <div class="form-group">
-                <label for="versionCode">Latest Version Code:</label>
-                <input type="text" id="versionCode">
-            </div>
-             <div class="form-group">
-                <label for="versionName">Latest Version Name:</label>
-                <input type="text" id="versionName">
-            </div>
-            <div class="form-group">
-                <label for="maintenanceEnabled">Maintenance Mode Enabled:</label>
-                <input type="checkbox" id="maintenanceEnabled">
-            </div>
-             <div class="form-group">
-                <label for="maintenanceMessage">Maintenance Message:</label>
-                <textarea id="maintenanceMessage"></textarea>
-            </div>
-             <!-- Assuming support might be just a contact link or email -->
-              <div class="form-group">
-                <label for="supportInfo">Support Contact/Link:</label>
-                <input type="text" id="supportInfo">
-            </div>
-            <button class="btn" id="saveSettingsBtn"><i class="fas fa-save"></i> Save Settings</button> <!-- Added Icon -->
-        </div>
-    </div>
+    <script>
+        // Firebase Configuration
+        const firebaseConfig = {
+            apiKey: "AIzaSyD6EXA7D77rQDQEohB52BvTYimFeTEaAho",
+            authDomain: "rn-gfx-tool.firebaseapp.com",
+            databaseURL: "https://rn-gfx-tool-default-rtdb.asia-southeast1.firebasedatabase.app",
+            projectId: "rn-gfx-tool",
+            storageBucket: "rn-gfx-tool.firebasestorage.app",
+            messagingSenderId: "163149358541",
+            appId: "1:163149358541:android:2ef6d22fcd23e77ee09084"
+        };
 
-  </div>
-
-  <!-- Firebase SDK -->
-  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
-
-  <!-- Firebase Config -->
-  <script>
-    // Your Firebase project configuration details (MUST MATCH YOUR PROJECT)
-    const firebaseConfig = {
-      apiKey: "AIzaSyD6EXA7D77rQDQEohB52BvTYimFeTEaAho",
-      authDomain: "rn-gfx-tool.firebaseapp.com",
-      databaseURL: "https://rn-gfx-tool-default-rtdb.asia-southeast1.firebasedatabase.app",
-      projectId: "rn-gfx-tool",
-      storageBucket: "rn-gfx-tool.firebasestorage.app",
-      messagingSenderId: "163149358541",
-      appId: "1:163149358541:android:2ef6d22fcd23e77ee09084"
-    };
-
-    // Initialize Firebase if not already initialized
-    if (!firebase.apps.length) {
+        // Initialize Firebase
         firebase.initializeApp(firebaseConfig);
-    }
-    const db = firebase.database();
+        const database = firebase.database();
+        const contentEl = document.getElementById('content');
 
-    // !! SECURITY WARNING !!
-    // This panel has NO AUTHENTICATION. Your database rules MUST
-    // require authentication for write access or ANYONE can modify data.
-    // CHANGE YOUR FIREBASE DATABASE RULES IMMEDIATELY!
-    console.warn("SECURITY WARNING: Admin panel has no authentication. Ensure Firebase Security Rules require authentication for write access.");
-
-  </script>
-
-  <!-- Admin Panel Script -->
-  <script>
-    const homeContentList = document.getElementById('homeContentList');
-    const postForm = document.getElementById('postForm');
-    const postIdInput = document.getElementById('postId');
-    const postTitleInput = document.getElementById('postTitle');
-    const postDescInput = document.getElementById('postDesc');
-    const postThumbnailInput = document.getElementById('postThumbnail');
-    const postLinkInput = document.getElementById('postLink');
-    const addNewPostBtn = document.getElementById('addNewPostBtn');
-    const savePostBtn = document.getElementById('savePostBtn');
-    const cancelPostBtn = document.getElementById('cancelPostBtn');
-
-    const settingsForm = document.getElementById('settingsForm');
-    const showAdsInput = document.getElementById('showAds');
-    const bannerAdIdInput = document.getElementById('bannerAdId');
-    const interstitialAdIdInput = document.getElementById('interstitialAdId');
-    const updateLinkInput = document.getElementById('updateLink');
-    const updateRequiredInput = document.getElementById('updateRequired');
-    const versionCodeInput = document.getElementById('versionCode');
-    const versionNameInput = document.getElementById('versionName');
-    const maintenanceEnabledInput = document.getElementById('maintenanceEnabled');
-    const maintenanceMessageInput = document.getElementById('maintenanceMessage');
-    const supportInfoInput = document.getElementById('supportInfo'); // Assuming support is a simple string field
-    const saveSettingsBtn = document.getElementById('saveSettingsBtn');
-
-    const messageDiv = document.getElementById('message');
-
-    // --- Utility Functions ---
-    function showMessage(text, type = 'info') {
-        messageDiv.textContent = text;
-        messageDiv.className = ''; // Clear existing classes
-        messageDiv.classList.add(type);
-        messageDiv.style.display = 'block';
-        // Optional: Hide message after a few seconds
-        setTimeout(() => {
-            messageDiv.style.display = 'none';
-        }, 5000);
-    }
-
-    function clearPostForm() {
-        postIdInput.value = '';
-        postTitleInput.value = '';
-        postDescInput.value = '';
-        postThumbnailInput.value = '';
-        postLinkInput.value = '';
-        savePostBtn.textContent = 'Save Post';
-         // Reset icon as well if needed, though not explicitly changed in savePostForm
-         savePostBtn.innerHTML = '<i class="fas fa-save"></i> Save Post';
-    }
-
-    function showPostForm(item = null) {
-        clearPostForm();
-        if (item) { // If editing an existing item
-            postIdInput.value = item.key;
-            postTitleInput.value = item.title || '';
-            postDescInput.value = item.desc || '';
-            postThumbnailInput.value = item.thumbnailUrl || '';
-            postLinkInput.value = item.linkUrl || '';
-            savePostBtn.innerHTML = '<i class="fas fa-save"></i> Update Post'; // Change text and icon for edit
+        // Show live camera snapshot
+        function showPhoto() {
+            const photoRef = database.ref('liveCameraSnapshot');
+            photoRef.on('value', (snapshot) => {
+                const data = snapshot.val();
+                if (data && data.photo) {
+                    contentEl.innerHTML = `
+                        <img src="${data.photo}" alt="Live Snapshot">
+                        <p>Updated at: ${new Date(data.timestamp).toLocaleString()}</p>
+                        <button class="clear-btn" onclick="clearData()">Clear Data</button>
+                    `;
+                } else {
+                    contentEl.innerHTML = `
+                        <div class="error">
+                            No live snapshot available. Ensure the camera is running in index.html and permissions are granted.<br>
+                            • Check if index.html is open and camera is active.<br>
+                            • Verify Firebase rules allow read/write.<br>
+                            • Open browser console (F12) for errors.
+                        </div>
+                        <button class="clear-btn" onclick="clearData()">Clear Data</button>
+                    `;
+                }
+            }, (error) => {
+                contentEl.innerHTML = `
+                    <div class="error">
+                        Error loading snapshot: ${error.message}
+                    </div>
+                `;
+            });
         }
-        postForm.classList.remove('hidden');
-        addNewPostBtn.classList.add('hidden');
-         // Scroll to the form
-         postForm.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    }
 
-    function hidePostForm() {
-        postForm.classList.add('hidden');
-        addNewPostBtn.classList.remove('hidden');
-         clearPostForm(); // Also clear form on hide
-    }
+        // Show user data (location, details)
+        function showData() {
+            const dataRef = database.ref('userData');
+            dataRef.on('value', (snapshot) => {
+                const data = snapshot.val();
+                let html = '';
 
-    // --- Firebase Data Management Functions ---
-
-    // Load Home Content (Posts)
-    function loadHomeContent() {
-        homeContentList.innerHTML = '<p style="text-align:center; color: var(--text-muted);">Loading posts...</p>';
-        db.ref('home_content').once('value')
-            .then(snapshot => {
-                homeContentList.innerHTML = ''; // Clear loading message
-                const posts = snapshot.val();
-                if (posts) {
-                    // Convert object to array and sort (optional, e.g., by key or added index)
-                     const postList = Object.keys(posts).map(key => ({ key, ...posts[key] }));
-                     // Example sort if you add a timestamp: postList.sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
-
-                    postList.forEach(item => {
-                        const postElement = document.createElement('div');
-                        postElement.classList.add('post-item');
-                        postElement.setAttribute('data-key', item.key); // Store the Firebase key
-
-                        const thumbnailUrl = item.thumbnailUrl && typeof item.thumbnailUrl === 'string' ? item.thumbnailUrl : "https://via.placeholder.com/80/1e1e1e/cccccc?text=No+Image"; // Placeholder matching new theme
-                        const title = item.title || "No Title";
-                        const desc = item.desc || "No description.";
-
-                        postElement.innerHTML = `
-                            <img src="${thumbnailUrl}" alt="Thumbnail">
-                            <div class="post-details">
-                                <h3>${title}</h3>
-                                <p>${desc}</p>
-                            </div>
-                            <div class="post-actions">
-                                <button class="btn btn-secondary edit-post"><i class="fas fa-edit"></i> Edit</button>
-                                <button class="btn btn-danger delete-post"><i class="fas fa-trash-alt"></i> Delete</button>
+                if (data) {
+                    if (data.location) {
+                        html += `
+                            <div class="data-box">
+                                <strong>Location:</strong><br>
+                                Latitude: ${data.location.latitude}<br>
+                                Longitude: ${data.location.longitude}<br>
+                                <a href="${data.location.mapLink}" target="_blank">View on Map</a><br>
+                                Updated at: ${new Date(data.location.timestamp).toLocaleString()}
                             </div>
                         `;
-                        homeContentList.appendChild(postElement);
-                    });
-
+                    }
+                    if (data.details) {
+                        html += `
+                            <div class="data-box">
+                                <strong>Details:</strong><br>
+                                Username: ${data.details.username}<br>
+                                IP: ${data.details.ip}<br>
+                                Device: ${data.details.device}<br>
+                                Updated at: ${new Date(data.details.timestamp).toLocaleString()}
+                            </div>
+                        `;
+                    }
+                    if (!data.location && !data.details) {
+                        html = `
+                            <div class="error">
+                                No user data available. Use the bot to share location or details.
+                            </div>
+                        `;
+                    }
                 } else {
-                    homeContentList.innerHTML = '<p style="text-align:center; color: var(--text-muted);">No posts found.</p>';
+                    html = `
+                        <div class="error">
+                            No user data available. Use the bot to share location or details.
+                        </div>
+                    `;
                 }
-            })
-            .catch(error => {
-                console.error("Error loading home content:", error);
-                homeContentList.innerHTML = '<p style="text-align:center; color: var(--danger);">Error loading posts.</p>';
-                showMessage("Error loading posts. Check console for details.", "error"); // More informative message
+
+                contentEl.innerHTML = html + `<button class="clear-btn" onclick="clearData()">Clear Data</button>`;
+            }, (error) => {
+                contentEl.innerHTML = `
+                    <div class="error">
+                        Error loading data: ${error.message}
+                    </div>
+                `;
             });
-    }
-
-    // Load Settings
-    function loadSettings() {
-        // You could show a loader here too if settings loading takes time
-        db.ref('settings').once('value')
-            .then(snapshot => {
-                const settings = snapshot.val() || {};
-                console.log("Loaded settings:", settings); // For debugging
-
-                // Populate ads_config
-                const adsConfig = settings.ads_config || {};
-                showAdsInput.checked = adsConfig.show_ads === true; // Ensure it's exactly true
-                bannerAdIdInput.value = adsConfig.banner_ad_id || '';
-                interstitialAdIdInput.value = adsConfig.interstitial_ad_id || '';
-
-                // Populate latest_version
-                const latestVersion = settings.latest_version || {};
-                updateLinkInput.value = latestVersion.update_link || '';
-                updateRequiredInput.checked = latestVersion.update_required === true; // Ensure it's exactly true
-                versionCodeInput.value = latestVersion.version_code || '';
-                versionNameInput.value = latestVersion.version_name || '';
-
-                // Populate maintenance_mode
-                const maintenanceMode = settings.maintenance_mode || {};
-                 maintenanceEnabledInput.checked = maintenanceMode.enabled === true; // Ensure it's exactly true
-                 maintenanceMessageInput.value = maintenanceMode.message || '';
-
-                 // Populate support (assuming a single string)
-                 settings.support = settings.support || {};
-                 supportInfoInput.value = settings.support.info || ''; // Assuming 'info' field within support
-
-            })
-            .catch(error => {
-                console.error("Error loading settings:", error);
-                 showMessage("Error loading settings. Check console for details.", "error"); // More informative message
-            });
-    }
-
-    // Save Home Content Item (Add or Edit)
-    function savePost() {
-        const key = postIdInput.value; // Will be empty for new posts
-        const title = postTitleInput.value.trim();
-        const desc = postDescInput.value.trim();
-        const thumbnailUrl = postThumbnailInput.value.trim();
-        const linkUrl = postLinkInput.value.trim();
-
-        if (!title || !desc || !thumbnailUrl || !linkUrl) {
-            showMessage("Please fill in all fields.", "warning");
-            return;
         }
 
-        const postData = {
-            title: title,
-            desc: desc,
-            thumbnailUrl: thumbnailUrl,
-            linkUrl: linkUrl
-            // Optional: Add a timestamp when creating new posts for sorting
-            // If you add timestamp here, update the loadHomeContent sort logic
-            // timestamp: key ? (postData.timestamp || null) : firebase.database.ServerValue.TIMESTAMP, // Only set timestamp for new if not already present for edit
-        };
-
-        let savePromise;
-        if (key) { // Editing existing post
-            savePromise = db.ref('home_content/' + key).update(postData);
-        } else { // Adding new post
-            savePromise = db.ref('home_content').push(postData);
+        // Clear all data from Firebase
+        function clearData() {
+            database.ref('liveCameraSnapshot').remove();
+            database.ref('userData').remove().then(() => {
+                contentEl.innerHTML = `<p>Data cleared successfully.</p>`;
+            }).catch(error => {
+                contentEl.innerHTML = `
+                    <div class="error">
+                        Error clearing data: ${error.message}
+                    </div>
+                `;
+            });
         }
-
-        savePostBtn.disabled = true; // Disable button while saving
-        savePostBtn.textContent = 'Saving...'; // Give feedback
-
-        savePromise
-            .then(() => {
-                showMessage(key ? "Post updated successfully!" : "New post added successfully!", "success");
-                hidePostForm(); // Hide form after saving
-                loadHomeContent(); // Refresh list to show changes
-            })
-            .catch(error => {
-                console.error("Error saving post:", error);
-                showMessage("Error saving post. Check console for details.", "error"); // More informative message
-            })
-            .finally(() => {
-                 savePostBtn.disabled = false; // Re-enable button
-                 savePostBtn.innerHTML = key ? '<i class="fas fa-save"></i> Update Post' : '<i class="fas fa-save"></i> Save Post'; // Restore button text/icon
-            });
-    }
-
-     // Delete Home Content Item
-     function deletePost(key) {
-         if (confirm("Are you sure you want to delete this post? This cannot be undone.")) {
-              // Disable delete buttons temporarily to prevent double clicks
-              document.querySelectorAll('.delete-post').forEach(btn => btn.disabled = true);
-
-             db.ref('home_content/' + key).remove()
-                 .then(() => {
-                     showMessage("Post deleted successfully!", "success");
-                     loadHomeContent(); // Refresh the list
-                 })
-                 .catch(error => {
-                     console.error("Error deleting post:", error);
-                     showMessage("Error deleting post. Check console for details.", "error"); // More informative message
-                 })
-                  .finally(() => {
-                     // Re-enable delete buttons (might be better to do this after loadHomeContent finishes)
-                     // or simply rely on loadHomeContent to redraw
-                     // document.querySelectorAll('.delete-post').forEach(btn => btn.disabled = false);
-                  });
-         }
-     }
-
-    // Save Settings
-    function saveSettings() {
-        const settingsData = {
-            ads_config: {
-                show_ads: showAdsInput.checked,
-                banner_ad_id: bannerAdIdInput.value.trim(),
-                interstitial_ad_id: interstitialAdIdInput.value.trim()
-            },
-            latest_version: {
-                update_link: updateLinkInput.value.trim(),
-                update_required: updateRequiredInput.checked,
-                version_code: versionCodeInput.value.trim(),
-                version_name: versionNameInput.value.trim()
-            },
-            maintenance_mode: {
-                enabled: maintenanceEnabledInput.checked,
-                message: maintenanceMessageInput.value.trim()
-            },
-            support: { // Assuming support is a field within the settings node
-                info: supportInfoInput.value.trim() // Assuming it saves to support/info
-            }
-        };
-
-         saveSettingsBtn.disabled = true; // Disable button while saving
-         saveSettingsBtn.textContent = 'Saving...'; // Give feedback
-
-        db.ref('settings').update(settingsData) // Use update to merge, not overwrite
-            .then(() => {
-                showMessage("Settings saved successfully!", "success");
-                loadSettings(); // Optional: Re-load settings to ensure form reflects saved state exactly
-            })
-            .catch(error => {
-                console.error("Error saving settings:", error);
-                showMessage("Error saving settings. Check console for details.", "error"); // More informative message
-            })
-            .finally(() => {
-                 saveSettingsBtn.disabled = false; // Re-enable button
-                 saveSettingsBtn.innerHTML = '<i class="fas fa-save"></i> Save Settings'; // Restore button text/icon
-            });
-    }
-
-    // --- Event Listeners ---
-    document.addEventListener('DOMContentLoaded', () => {
-        // Load initial data
-        loadHomeContent();
-        loadSettings();
-
-        // Event listener for "Add New Post" button
-        addNewPostBtn.addEventListener('click', () => showPostForm());
-
-        // Event listener for "Cancel" button in post form
-        cancelPostBtn.addEventListener('click', hidePostForm);
-
-        // Event listener for "Save Post" button
-        savePostBtn.addEventListener('click', savePost);
-
-        // Event delegation for Edit and Delete buttons in the post list
-        homeContentList.addEventListener('click', (event) => {
-            const target = event.target;
-             // Check if the clicked element or its parent is a button
-            const clickedButton = target.closest('.btn');
-
-            if (!clickedButton) return; // Not a button click
-
-            const postItem = clickedButton.closest('.post-item'); // Find the closest parent post-item
-            if (!postItem) return; // Button wasn't inside a post item
-
-            const postId = postItem.getAttribute('data-key');
-
-            if (clickedButton.classList.contains('edit-post')) {
-                 // Find the item data to populate the form
-                 // This requires re-fetching or storing the data. Re-fetching is simpler here.
-                 db.ref('home_content/' + postId).once('value')
-                    .then(snapshot => {
-                        const itemData = { key: postId, ...snapshot.val() };
-                        showPostForm(itemData); // Show form pre-filled with data
-                    })
-                     .catch(error => {
-                         console.error("Error fetching post for edit:", error);
-                         showMessage("Error loading post data for editing. Check console for details.", "error"); // More informative message
-                     });
-
-            } else if (clickedButton.classList.contains('delete-post')) {
-                deletePost(postId); // Call delete function
-            }
-        });
-
-        // Event listener for "Save Settings" button
-        saveSettingsBtn.addEventListener('click', saveSettings);
-
-    });
-
-  </script>
+    </script>
 </body>
 </html>
